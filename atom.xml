@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Prathamesh Satpute]]></title>
+  <link href="http://prathamesh7pute.github.io/atom.xml" rel="self"/>
+  <link href="http://prathamesh7pute.github.io/"/>
+  <updated>2013-04-12T00:36:37-04:00</updated>
+  <id>http://prathamesh7pute.github.io/</id>
+  <author>
+    <name><![CDATA[Prathamesh Satpute]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+</feed>

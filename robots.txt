@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://prathamesh7pute.github.io/sitemap.xml 
