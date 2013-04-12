@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: REST | Prathamesh Satpute]]></title>
-  <link href="http://prathamesh7pute.github.io/blog/categories/rest/atom.xml" rel="self"/>
-  <link href="http://prathamesh7pute.github.io/"/>
-  <updated>2013-04-12T00:47:08-04:00</updated>
-  <id>http://prathamesh7pute.github.io/</id>
+  <link href="http://prathamesh.satpute.me/blog/categories/rest/atom.xml" rel="self"/>
+  <link href="http://prathamesh.satpute.me/"/>
+  <updated>2013-04-12T02:21:43-04:00</updated>
+  <id>http://prathamesh.satpute.me/</id>
   <author>
     <name><![CDATA[Prathamesh Satpute]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Backbone Mongoose Sub-documents REST]]></title>
-    <link href="http://prathamesh7pute.github.io/blog/2013/04/12/backbone-mongoose-sub-documents-rest/"/>
+    <link href="http://prathamesh.satpute.me/blog/2013/04/12/backbone-mongoose-sub-documents-rest/"/>
     <updated>2013-04-12T00:43:00-04:00</updated>
-    <id>http://prathamesh7pute.github.io/blog/2013/04/12/backbone-mongoose-sub-documents-rest</id>
+    <id>http://prathamesh.satpute.me/blog/2013/04/12/backbone-mongoose-sub-documents-rest</id>
     <content type="html"><![CDATA[<p>Managing sub documents with restful API in backbone with mongoose and node.js</p>
 ]]></content>
   </entry>
