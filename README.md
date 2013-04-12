@@ -1,3 +1,3 @@
-prathamesh7pute.github.com
+prathamesh7pute.github.io
 ==========================
 
