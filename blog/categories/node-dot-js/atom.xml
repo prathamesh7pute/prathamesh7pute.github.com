@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[Prathamesh Satpute]]></title>
-  <link href="http://prathamesh7pute.github.io/atom.xml" rel="self"/>
+  <title><![CDATA[Category: Node.js | Prathamesh Satpute]]></title>
+  <link href="http://prathamesh7pute.github.io/blog/categories/node-dot-js/atom.xml" rel="self"/>
   <link href="http://prathamesh7pute.github.io/"/>
   <updated>2013-04-12T00:47:08-04:00</updated>
   <id>http://prathamesh7pute.github.io/</id>
