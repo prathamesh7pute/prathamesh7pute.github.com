@@ -9,8 +9,7 @@
   <meta name="author" content="Prathamesh Satpute">
 
   
-  <meta name="description" content="Managing sub documents with restful API in backbone with mongoose and node.js
-">
+  <meta name="description" content="Have you ever stuck into the web application with lots of JavaScript, CSS files and keeping track of their order of loading then RequireJS will be of &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -84,7 +83,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2013/04/12/backbone-mongoose-sub-documents-rest/">Backbone Mongoose Sub-documents REST</a></h1>
+      <h1 class="entry-title"><a href="/blog/2013/04/18/creating-modular-web-app-with-one-javascript-and-one-css-file-by-using-requirejs-and-almond/">Creating Modular Web App With One JavaScript and One CSS File by Using RequireJS and Almond</a></h1>
     
     
       <p class="meta">
@@ -100,14 +99,304 @@
   
 
 
-<time datetime="2013-04-12T00:43:00-04:00" pubdate data-updated="true">Apr 12<span>th</span>, 2013</time>
+<time datetime="2013-04-18T06:25:00-04:00" pubdate data-updated="true">Apr 18<span>th</span>, 2013</time>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><p>Managing sub documents with restful API in backbone with mongoose and node.js</p>
+  <div class="entry-content"><p>Have you ever stuck into the web application with lots of JavaScript, CSS files and keeping track of their order of loading then RequireJS will be of your help.</p>
+
+<h2>What is RequireJS ?</h2>
+
+<p>RequireJS is a module loading library for the javascript, which will improve the speed and quality of javascript code.</p>
+
+<p>It also comes with a optimization tool r.js which combines related scripts together into build layers and minifies them via UglifyJS (the default) or Closure Compiler (an option when using Java), also it
+optimizes CSS by inlining CSS files referenced by @import and removing comments.</p>
+
+<h2>What is Almond ?</h2>
+
+<p>It&#8217;s a replacement AMD loader for RequireJS. It is a smaller &#8220;shim&#8221; loader, providing the minimal AMD API footprint that includes loader plugin support.</p>
+
+<h2>Problem</h2>
+
+<p>A normal web application normally have following script loading structure</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/lib/jquery.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/lib/underscore.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/lib/backbone.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/models/todo.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/collections/todos.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/views/todoView.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/views/app.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>which will lead into the multiple HTTP requests</p>
+
+<p><img src="/images/requirejs-nrequests.png" alt="requirejs-nrequests" /></p>
+
+<h2>Goal</h2>
+
+<p>Minimize the browser request to exactly 3 resources one HTML, one JavaScript and one CSS.</p>
+
+<p><img src="/images/requirejs-3requests.png" alt="requirejs-3requests" /></p>
+
+<p>To achieve this we need to understand how RequireJS load the JavaScript files.</p>
+
+<h2>Script Loading</h2>
+
+<p>RequireJS takes a different approach to script loading than traditional script tags. As mention on its site RequireJS goal is to encourage modular code.</p>
+
+<p>RequireJS loads all code relative to a baseUrl. The baseUrl is normally set to the same directory as the script used in a data-main attribute for the top level script to load for a page or baseUrl can be set manually via the RequireJS config.</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">data-main=</span><span class="s">&quot;scripts/main&quot;</span> <span class="na">src=</span><span class="s">&quot;scripts/require.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And the main file with RequireJS configuration will look like this</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="nx">requirejs</span><span class="p">.</span><span class="nx">config</span><span class="p">({</span>
+</span><span class='line'>   <span class="c1">// The shim config allows us to configure dependencies for</span>
+</span><span class='line'>   <span class="c1">// scripts that do not call define() to register a module</span>
+</span><span class='line'>  <span class="nx">shim</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">underscore</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;_&#39;</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="nx">backbone</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">deps</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;underscore&#39;</span><span class="p">,</span> <span class="s1">&#39;jquery&#39;</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;Backbone&#39;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="nx">paths</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">jquery</span><span class="o">:</span> <span class="s1">&#39;lib/jquery&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">underscore</span><span class="o">:</span> <span class="s1">&#39;lib/underscore&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">backbone</span><span class="o">:</span> <span class="s1">&#39;lib/backbone/backbone&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="c1">// Start the main app logic.</span>
+</span><span class='line'><span class="nx">require</span><span class="p">([</span><span class="s1">&#39;jquery&#39;</span><span class="p">,</span> <span class="s1">&#39;backbone&#39;</span><span class="p">,</span> <span class="s1">&#39;views/app&#39;</span><span class="p">],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">AppView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Initialize the application view</span>
+</span><span class='line'>  <span class="k">new</span> <span class="nx">AppView</span><span class="p">();</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Modules</h2>
+
+<p>Modules in RequireJS are an extension of the Module Pattern, with the benefit of not needing globals to refer to other modules. They can explicitly list their dependencies and get a handle on those dependencies without needing to refer to global objects, but instead receive the dependencies as arguments to the function that defines the module.</p>
+
+<p>There should only be one module definition per file on disk. A sample module with dependency looks like this</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="nx">define</span><span class="p">([</span><span class="s1">&#39;jquery&#39;</span><span class="p">,</span><span class="s1">&#39;underscore&#39;</span><span class="p">,</span><span class="s1">&#39;backbone&#39;</span><span class="p">,</span><span class="s1">&#39;collections/todos&#39;</span><span class="p">],</span>
+</span><span class='line'><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">Todos</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">AppView</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">View</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">el</span><span class="o">:</span> <span class="s1">&#39;#todo&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">events</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="s1">&#39;click #addTodo&#39;</span><span class="o">:</span> <span class="s1">&#39;newTodo&#39;</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{...},</span>
+</span><span class='line'>      <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{...},</span>
+</span><span class='line'>      <span class="nx">newTodo</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{...}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">AppView</span><span class="p">;</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Shims</h2>
+
+<p>For older libraries which do not support AMD RequireJS can handle them via shims.</p>
+
+<p>Shims configure the dependencies and exports for older, traditional &#8220;browser globals&#8221; scripts that do not use define() to declare the dependencies and set a module value.</p>
+
+<p>Here is an example. It requires RequireJS 2.1.0+, and assumes backbone.js, underscore.js and jquery.js have been installed in the baseUrl directory. If not, then you may need to set a paths config for them:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="nx">shim</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">underscore</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;_&#39;</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="nx">backbone</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">deps</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;underscore&#39;</span><span class="p">,</span> <span class="s1">&#39;jquery&#39;</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;Backbone&#39;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now with this configuration and organizing JavaScript code in our app resolves dependency issue we don&#8217;t need to track the order in which script gets loaded.</p>
+
+<p>But still there are HTTP request for each javascript file. This can be minimize using the RequireJS optimization tool r.js</p>
+
+<h2>Optimization</h2>
+
+<p>r.js tool combines related scripts together into build layers and minifies them and also
+optimizes CSS by inlining CSS files referenced by @import and removing comments.</p>
+
+<p>The optimizer can be run using Node, Java with Rhino, or in the browser.</p>
+
+<p>So with node we can easily optimize all  JavaScript and CSS files by using the config file and following command</p>
+
+<p>For JavaScript</p>
+
+<pre><code>node r.js -o baseUrl=. paths.jquery=some/other/jquery name=main out=main-built.js
+</code></pre>
+
+<p>CSS files can be optimize by the following command</p>
+
+<pre><code>node r.js -o cssIn=main.css out=main-built.css
+</code></pre>
+
+<p>Or we can configure the whole project by giving a single config file and running the following command</p>
+
+<pre><code>node r.js -o build.js
+</code></pre>
+
+<p>and build.js config file will look like</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="p">({</span>
+</span><span class='line'>    <span class="nx">baseUrl</span><span class="o">:</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">paths</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">jquery</span><span class="o">:</span> <span class="s2">&quot;some/other/jquery&quot;</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">out</span><span class="o">:</span> <span class="s2">&quot;main-built.js&quot;</span>
+</span><span class='line'><span class="p">})</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Once we get this we can modify our HTML to include this new file.</p>
+
+<p>Now with this application will load single CSS file and 2 JavaScript files (require.js and app.js) which is not our goal.</p>
+
+<h2>Almond Configuration</h2>
+
+<p>Now as we have minimize all the javascript files into single file we do not require the require js asynchronous script loading functionality thats why jbruck created the almond its a replacement AMD loader for RequireJS. It is a smaller &#8220;shim&#8221; loader, providing the minimal AMD API footprint that includes loader plugin support.</p>
+
+<p>when it pass to the r.js optimizer it creates the minified script with require module loader functionality</p>
+
+<pre><code>node r.js -o baseUrl=. name=path/to/almond include=main out=main-built.js wrap=true
+</code></pre>
+
+<p>So basically this command will wrap everything inside a function</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">//almond will be here</span>
+</span><span class='line'>    <span class="c1">//main and its nested dependencies will be here</span>
+</span><span class='line'><span class="p">}());</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>This can also be done with config file by just adding the path to almond file</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='js'><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nx">baseUrl</span><span class="o">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/public/js/&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;almond.js&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">out</span><span class="o">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/public/js/main-built.js&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">mainConfigFile</span><span class="o">:</span> <span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/public/js/main.js&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="nx">include</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;main&#39;</span><span class="p">],</span>
+</span><span class='line'>  <span class="nx">insertRequire</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;main&#39;</span><span class="p">],</span>
+</span><span class='line'>  <span class="nx">wrap</span><span class="o">:</span> <span class="kc">true</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>now with this JavaScript we can modify our HTML as below</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/main-built.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now we have exactly 3 request one HTML, one Javascript and one CSS.</p>
+
+<h2>Optimizing images</h2>
+
+<p>Normal web app will have many images on the page for e.g. logo, icons etc. These images are normally added as the css classes with background images. HTTP request call to load them can be save if they are added as the base64 data:image</p>
+
+<pre><code>background-image: url("data:image/png;base64,iVBOR...");
+</code></pre>
+
+<p>so that with CSS optimization and serving them as gzip will reduce the size of them dramatically.</p>
 </div>
   
   
@@ -128,7 +417,7 @@
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2013/04/12/backbone-mongoose-sub-documents-rest/">Backbone Mongoose Sub-documents REST</a>
+        <a href="/blog/2013/04/18/creating-modular-web-app-with-one-javascript-and-one-css-file-by-using-requirejs-and-almond/">Creating modular web app with one JavaScript and one CSS file by using RequireJS and Almond</a>
       </li>
     
   </ul>

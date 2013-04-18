@@ -2,20 +2,20 @@
 <urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
     <url>
         <loc>
-            http://prathamesh.satpute.me/blog/2013/04/12/backbone-mongoose-sub-documents-rest/
+            http://prathamesh.satpute.me/blog/2013/04/18/creating-modular-web-app-with-one-javascript-and-one-css-file-by-using-requirejs-and-almond/
         </loc>
-        <lastmod>2013-04-12T02:21:07-04:00</lastmod>
+        <lastmod>2013-04-18T07:41:25-04:00</lastmod>
     </url>
     <url>
         <loc>http://prathamesh.satpute.me/blog/archives/</loc>
-        <lastmod>2013-04-12T02:21:07-04:00</lastmod>
+        <lastmod>2013-04-18T07:41:25-04:00</lastmod>
     </url>
     <url>
         <loc>http://prathamesh.satpute.me/</loc>
-        <lastmod>2013-04-12T02:21:07-04:00</lastmod>
+        <lastmod>2013-04-18T07:41:25-04:00</lastmod>
     </url>
     <url>
         <loc>http://prathamesh.satpute.me/robots.txt</loc>
-        <lastmod>2013-04-12T02:21:07-04:00</lastmod>
+        <lastmod>2013-04-18T06:19:39-04:00</lastmod>
     </url>
 </urlset>
