@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>RequireJS</title>
+
+		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
+		<meta name="author" content="Hakim El Hattab">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="css/reveal.min.css">
+		<link rel="stylesheet" href="css/theme/default.css" id="theme">
+
+		<!-- For syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+		<script>
+			document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+				<section>
+			        <h1>RequireJS</h1>
+			        <br /><br />
+			    <p>
+				    Prathamesh Satpute
+				</p>
+				<p>
+					@prathamesh7pute
+				</p>
+				</section>
+
+			    <section>
+			        <h1>What is RequireJS ?</h1>
+			        <p>
+			        <br>
+			    </p>
+			    <p>
+				    <ul>
+				        <li>Javascript Module loader library</li>
+				        <li>Supports asynchronous script loading and dependency management</li>
+				        <li>Includes optimization and build tool r.js</li>
+				    </ul>
+				</p>
+				</section>
+				<section>
+				    <section>
+				        <h2>Problem</h2>
+				        <div>
+				            <br>
+				        </div>
+				        <div>
+				            <ul>
+				                <li>As web application gets bigger code complexity grows</li>
+				                <li>Number of script files get increases</li>
+				                <li>HTTP calls increases which reduces the performance of app&nbsp;</li>
+				                <li>Managing multiple script files and order of their inclusion becomes problematic</li>
+				                <li>
+				                    <span style="line-height: 1.2em; letter-spacing: -0.02em;">Pollutes the global scope</span>
+				                </li>
+				                <li>Assembly of web application gets harder</li>
+				            </ul>
+				        </div>
+				    </section>
+				    <section>
+				        <h2>Dependencies and Order</h2>
+				        <div>
+				            <br>
+				        </div>
+				        <div>
+				            <pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/lib/jquery.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/lib/underscore.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/lib/backbone.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/models/todo.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/collections/todos.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/views/todoView.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class='line'><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;js/views/app.js&quot;</span> <span class="na">type=</span><span class="s">&quot;text/javascript&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span></code></pre>
+				        </div>
+				    </section>
+				    <section>
+				        <h2>Performance</h2>
+				        <div>
+				            <img src="http://i.imgur.com/2KCxcDG.png">
+				        </div>
+				    </section>
+				</section>
+				<section>
+				    <section>
+				        <h2>Solution</h2>
+				        <div>
+				            <br>
+				        </div>
+				        <div>
+				            <ol>
+				                <li>Front-end developers need a something like #include/import/require</li>
+				                <li>Optimization tool which takes care of resolving dependencies and script minification</li>
+				                <li>Modular approach with the JavaScript Code</li>
+				            </ol>
+				        </div>
+				    </section>
+				    <section>
+				        <h2>Modules</h2>
+				        <div>
+				            <br>
+				        </div>
+				        <div>
+				        	<pre><code class='js'><span class='line'><span class="nx">define</span><span class="p">([</span><span class="s1">&#39;jquery&#39;</span><span class="p">,</span><span class="s1">&#39;underscore&#39;</span><span class="p">,</span><span class="s1">&#39;backbone&#39;</span><span class="p">,</span><span class="s1">&#39;collections/todos&#39;</span><span class="p">],</span>
+</span><span class='line'><span class="kd">function</span><span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">Todos</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="kd">var</span> <span class="nx">AppView</span> <span class="o">=</span> <span class="nx">Backbone</span><span class="p">.</span><span class="nx">View</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+</span><span class='line'>      <span class="nx">el</span><span class="o">:</span> <span class="s1">&#39;#todo&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">events</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="s1">&#39;click #addTodo&#39;</span><span class="o">:</span> <span class="s1">&#39;newTodo&#39;</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{...},</span>
+</span><span class='line'>      <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{...},</span>
+</span><span class='line'>      <span class="nx">newTodo</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{...}</span>
+</span><span class='line'>  <span class="p">});</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="k">return</span> <span class="nx">AppView</span><span class="p">;</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre>
+				        </div>
+				    </section>
+				    <section>
+				        <h2>Shims</h2>
+				        <div>
+				        	<br />
+				        </div>
+				        <div>
+				        	<pre><code class='js'><span class='line'><span class="nx">shim</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">underscore</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;_&#39;</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="nx">backbone</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">deps</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;underscore&#39;</span><span class="p">,</span> <span class="s1">&#39;jquery&#39;</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;Backbone&#39;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span></code></pre>
+				        </div>
+				    </section>
+				    <section>
+				        <h2>Configuration</h2>
+				        <div>
+				        	<br />
+				        	<pre><code class='html'><span class='line'><span class="nt">&lt;script </span><span class="na">data-main=</span><span class="s">&quot;scripts/main&quot;</span> <span class="na">src=</span><span class="s">&quot;scripts/require.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span></code></pre>
+				        <div>
+				        <div>
+				        	<pre><code class='js'><span class='line'><span class="nx">requirejs</span><span class="p">.</span><span class="nx">config</span><span class="p">({</span>
+</span><span class='line'>   <span class="c1">// The shim config allows us to configure dependencies for</span>
+</span><span class='line'>   <span class="c1">// scripts that do not call define() to register a module</span>
+</span><span class='line'>  <span class="nx">shim</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">underscore</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;_&#39;</span>
+</span><span class='line'>      <span class="p">},</span>
+</span><span class='line'>      <span class="nx">backbone</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nx">deps</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;underscore&#39;</span><span class="p">,</span> <span class="s1">&#39;jquery&#39;</span><span class="p">],</span>
+</span><span class='line'>          <span class="nx">exports</span><span class="o">:</span> <span class="s1">&#39;Backbone&#39;</span>
+</span><span class='line'>      <span class="p">}</span>
+</span><span class='line'>  <span class="p">},</span>
+</span><span class='line'>  <span class="nx">paths</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>      <span class="nx">jquery</span><span class="o">:</span> <span class="s1">&#39;lib/jquery&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">underscore</span><span class="o">:</span> <span class="s1">&#39;lib/underscore&#39;</span><span class="p">,</span>
+</span><span class='line'>      <span class="nx">backbone</span><span class="o">:</span> <span class="s1">&#39;lib/backbone/backbone&#39;</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">});</span>
+</span><span class='line'><span class="c1">// Start the main app logic.</span>
+</span><span class='line'><span class="nx">require</span><span class="p">([</span><span class="s1">&#39;jquery&#39;</span><span class="p">,</span> <span class="s1">&#39;backbone&#39;</span><span class="p">,</span> <span class="s1">&#39;views/app&#39;</span><span class="p">],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">$</span><span class="p">,</span> <span class="nx">Backbone</span><span class="p">,</span> <span class="nx">AppView</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// Initialize the application view</span>
+</span><span class='line'>  <span class="k">new</span> <span class="nx">AppView</span><span class="p">();</span>
+</span><span class='line'><span class="p">});</span>
+</span></code></pre>
+				        </div>
+				    </section>
+				    <section>
+				        <h2>Optimization</h2>
+				        <div>
+				        	<br />
+				        </div>
+				        <div>
+
+<pre><code>node r.js -o baseUrl=. paths.jquery=some/other/jquery name=main out=main-built.js
+</code></pre><br />
+<pre><code>node r.js -o cssIn=main.css out=main-built.css
+</code></pre><br />
+<pre><code>node r.js -o build.js
+</code></pre><br />
+<pre><code class='js'><span class='line'><span class="p">({</span>
+</span><span class='line'>    <span class="nx">baseUrl</span><span class="o">:</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">paths</span><span class="o">:</span> <span class="p">{</span>
+</span><span class='line'>        <span class="nx">jquery</span><span class="o">:</span> <span class="s2">&quot;some/other/jquery&quot;</span>
+</span><span class='line'>    <span class="p">},</span>
+</span><span class='line'>    <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">out</span><span class="o">:</span> <span class="s2">&quot;main-built.js&quot;</span>
+</span><span class='line'><span class="p">})</span>
+</span></code></pre>
+				        </div>
+				    </section>
+				</section>
+
+
+				<section>
+				    <h2>Thank You !!!!</h2>
+				</section>
+
+				<section>
+				    <h2>Resources</h2>
+				    <div><br /></div>
+				    <div>
+				    	<p><a href="http://requirejs.org" target="_blank">RequireJS</a></p>
+				    	<p><a href="https://github.com/jrburke/almond" target="_blank">Almond JS</a></p>
+				    	<p><a href="http://addyosmani.com/writing-modular-js/" target="_blank">Writing Modular JavaScript</a></p>
+				   	</div>
+				</section>
+
+
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/showdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+					// { src: 'plugin/search/search.js', async: true, condition: function() { return !!document.body.classList; } }
+					// { src: 'plugin/remotes/remotes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
