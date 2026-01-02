@@ -3,6 +3,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import { Metadata } from 'next';
 import CodeBlock from '@/app/components/CodeBlock';
 import PageLayout from '@/app/components/PageLayout';
+import { formatDate } from '@/lib/utils';
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
@@ -73,7 +74,10 @@ export default async function PostPage({
   return (
     <PageLayout>
       <article>
-        <h1>{data.title}</h1>
+        <h1 className="mb-2">{data.title}</h1>
+        <p className="text-gray-500 mb-8 mt-0">
+          Last updated: {formatDate(data.date)}
+        </p>
         <MDXRemote source={content} components={components} />
       </article>
     </PageLayout>

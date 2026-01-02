@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
   description:
     'A full-stack engineer passionate about AI, web development and open source. Sharing insights on Agentic AI, web development and more.',
-  keywords: [   
+  keywords: [
     'Agentic AI',
     'TypeScript',
     'Python',

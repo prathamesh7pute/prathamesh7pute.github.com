@@ -17,8 +17,10 @@ export default function About() {
     <PageLayout>
       <h1>About Me</h1>
       <p>
-        Hi, I’m Prathamesh — a full-stack engineer crafting <strong>Agentic AI solutions</strong>, modern frontends, and <strong>cloud-native Kubernetes infrastructure</strong>, passionate about{' '}
-        <strong>TypeScript, Python, and AI/LLM-driven systems</strong>.
+        Hi, I’m Prathamesh — a full-stack engineer crafting{' '}
+        <strong>Agentic AI solutions</strong>, modern frontends, and{' '}
+        <strong>cloud-native Kubernetes infrastructure</strong>, passionate
+        about <strong>TypeScript, Python, and AI/LLM-driven systems</strong>.
       </p>
     </PageLayout>
   );
