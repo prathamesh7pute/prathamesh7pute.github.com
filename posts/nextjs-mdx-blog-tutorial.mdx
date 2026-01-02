@@ -1,0 +1,183 @@
+---
+title: 'Building a Modern Blog with Next.js and MDX'
+description: 'Learn how to create a powerful blog using Next.js, MDX, and Tailwind CSS with syntax highlighting and SEO optimization'
+date: '2025-01-27'
+---
+
+Creating a modern blog has never been easier with the powerful combination of **Next.js**, **MDX**, and **Tailwind CSS**. In this tutorial, we'll build a feature-rich blog with syntax highlighting, SEO optimization, and a beautiful design.
+
+## Why This Tech Stack?
+
+The combination of Next.js, MDX, and Tailwind CSS provides:
+
+- **Next.js**: Server-side rendering and static site generation for optimal performance
+- **MDX**: Write interactive content with embedded React components
+- **Tailwind CSS**: Utility-first CSS framework for rapid styling
+
+## Setting Up the Project
+
+First, let's create a new Next.js project:
+
+```bash
+npx create-next-app@latest my-blog
+cd my-blog
+```
+
+Install the necessary dependencies:
+
+```bash
+npm install next-mdx-remote gray-matter react-syntax-highlighter @types/react-syntax-highlighter
+```
+
+## Configuring MDX
+
+Update your `next.config.mjs` to support MDX:
+
+```javascript
+import createMDX from '@next/mdx';
+
+const withMDX = createMDX({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+  },
+});
+
+const nextConfig = {
+  output: 'export',
+  images: { unoptimized: true },
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
+};
+
+export default withMDX(nextConfig);
+```
+
+## Creating a Blog Post Component
+
+Here's how to create a dynamic blog post page:
+
+```tsx
+import { getPostBySlug, getAllPosts } from '@/lib/posts';
+import { MDXRemote } from 'next-mdx-remote/rsc';
+
+export async function generateStaticParams() {
+  const posts = getAllPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+export default async function PostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const { content, data } = getPostBySlug(slug);
+
+  return (
+    <article className="prose mx-auto p-6">
+      <h1>{data.title}</h1>
+      <MDXRemote source={content} />
+    </article>
+  );
+}
+```
+
+## Adding Syntax Highlighting
+
+Create a `CodeBlock` component using `react-syntax-highlighter` for beautiful code snippets that support dark mode:
+
+```tsx
+'use client';
+
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import {
+  oneDark,
+  oneLight,
+} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useTheme } from 'next-themes';
+
+interface CodeBlockProps {
+  children?: string | string[];
+  language?: string;
+}
+
+export default function CodeBlock({ children, language }: CodeBlockProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  return (
+    <SyntaxHighlighter
+      language={language}
+      style={isDark ? oneDark : oneLight}
+      showLineNumbers
+    >
+      {String(children || '')}
+    </SyntaxHighlighter>
+  );
+}
+```
+
+## SEO Optimization
+
+Add metadata to your pages for better SEO:
+
+```tsx
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'My Blog - Modern Web Development',
+  description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
+  keywords: ['Next.js', 'MDX', 'Tailwind CSS', 'Blog', 'Web Development'],
+  authors: [{ name: 'Your Name' }],
+  openGraph: {
+    title: 'My Blog - Modern Web Development',
+    description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'My Blog - Modern Web Development',
+    description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
+  },
+};
+```
+
+## Styling with Tailwind CSS
+
+Use Tailwind's utility classes for beautiful, responsive design:
+
+```tsx
+export default function BlogPost({ post }) {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <article className="prose prose-lg max-w-none">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          {post.title}
+        </h1>
+        <div className="text-gray-600 dark:text-gray-400 mb-8">
+          {post.description}
+        </div>
+        <div className="prose prose-lg max-w-none">
+          <MDXRemote source={post.content} />
+        </div>
+      </article>
+    </div>
+  );
+}
+```
+
+## Conclusion
+
+This setup provides a solid foundation for a modern blog with:
+
+- ✅ Syntax highlighting for code blocks
+- ✅ SEO optimization with metadata
+- ✅ Responsive design with Tailwind CSS
+- ✅ Static site generation for performance
+- ✅ MDX support for interactive content
+
+Happy coding! 🚀
