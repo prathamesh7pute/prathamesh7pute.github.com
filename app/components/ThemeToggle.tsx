@@ -16,6 +16,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       className="ml-auto p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       type="button"
+      aria-label="Toggle theme"
     >
       {theme === 'dark' ? (
         <SunIcon className="w-5 h-5" />
