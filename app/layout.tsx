@@ -31,12 +31,6 @@ export const metadata: Metadata = {
       'A full-stack engineer passionate about AI, web development and open source. Sharing insights on Agentic AI, web development and more.',
     siteName: 'Prathamesh Satpute',
   },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Prathamesh Satpute',
-    description:
-      'A full-stack engineer passionate about AI, web development and open source. Sharing insights on Agentic AI, web development and more.',
-  },
   robots: {
     index: true,
     follow: true,

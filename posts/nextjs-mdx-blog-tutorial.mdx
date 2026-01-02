@@ -4,29 +4,34 @@ description: 'Creating a powerful blog using Next.js, MDX and Tailwind CSS with 
 date: '2026-01-01'
 ---
 
-To kick off the New Year 2026, I decided to get back into blogging and upgrade my old GitHub Pages blog using modern technologies. In this post, I’ll walk you through how I built a feature-rich, interactive blog with **Next.js, MDX, and Tailwind CSS**, complete with syntax highlighting, SEO optimization, and a beautiful design. I’m excited to start writing new posts about my learning and sharing insights along the way.
+To kick off the New Year 2026, I decided to upgrade my old GitHub Pages blog with modern tools. I’m excited to start sharing new posts about my learning journey and insights along the way.
+
+In this post, I’ll walk you through how I built a feature-rich, interactive blog using **Next.js, MDX, and Tailwind CSS**, complete with syntax highlighting, SEO optimization, and a sleek design.
 
 ## Why This Tech Stack?
 
-The combination of Next.js, MDX, and Tailwind CSS provides:
+The combination of **Next.js**, **MDX**, and **Tailwind CSS** provides a powerful and flexible foundation for modern blogging:
 
-- **Next.js**: Server-side rendering and static site generation for optimal performance
-- **MDX**: Write interactive content with embedded React components
-- **Tailwind CSS**: Utility-first CSS framework for rapid styling
+- **Next.js** — Static site generation and server-side rendering for excellent performance and SEO
+- **MDX** — Write content in Markdown while embedding React components seamlessly
+- **Tailwind CSS** — Utility-first styling for rapid development and consistent design
+
+This stack gives you the simplicity of Markdown with the flexibility of React and the performance benefits of a modern framework.
 
 ## Setting Up the Project
 
-First, let's create a new Next.js project:
+Start by creating a new Next.js project:
 
 ```bash
 npx create-next-app@latest my-blog
 cd my-blog
 ```
 
-Install the necessary dependencies:
+Install the dependencies needed for MDX and syntax highlighting:
 
 ```bash
-npm install next-mdx-remote gray-matter react-syntax-highlighter @types/react-syntax-highlighter
+npm install next-mdx-remote gray-matter react-syntax-highlighter
+npm install -D @types/react-syntax-highlighter
 ```
 
 ## Configuring MDX
@@ -53,9 +58,11 @@ const nextConfig = {
 export default withMDX(nextConfig);
 ```
 
-## Creating a Blog Post Component
+This configuration allows Next.js to treat .mdx files as first-class pages.
 
-Here's how to create a dynamic blog post page:
+## Creating a Dynamic Blog Post Page
+
+Here’s a simple example of a dynamic blog post page that renders MDX content:
 
 ```tsx
 import { getPostBySlug, getAllPosts } from '@/lib/posts';
@@ -85,9 +92,11 @@ export default async function PostPage({
 }
 ```
 
-## Adding Syntax Highlighting
+This setup enables static generation of each blog post while keeping the content flexible and easy to manage.
 
-Create a **CodeBlock** component using **react-syntax-highlighter** for beautiful code snippets that support dark mode:
+## Adding Syntax Highlighting (Dark & Light Mode)
+
+To render beautiful code blocks with theme support, create a reusable CodeBlock component:
 
 ```tsx
 'use client';
@@ -120,64 +129,94 @@ export default function CodeBlock({ children, language }: CodeBlockProps) {
 }
 ```
 
-## SEO Optimization
-
-Add metadata to your pages for better SEO:
-
-```tsx
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'My Blog - Modern Web Development',
-  description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
-  keywords: ['Next.js', 'MDX', 'Tailwind CSS', 'Blog', 'Web Development'],
-  authors: [{ name: 'Your Name' }],
-  openGraph: {
-    title: 'My Blog - Modern Web Development',
-    description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
-    type: 'website',
-    locale: 'en_US',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'My Blog - Modern Web Development',
-    description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
-  },
-};
-```
+You can now use this component inside your MDX files for clean, readable code snippets.
 
 ## Styling with Tailwind CSS
 
-Use Tailwind's utility classes for beautiful, responsive design:
+Tailwind makes it easy to build clean, responsive layouts:
 
 ```tsx
 export default function BlogPost({ post }) {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <article className="prose prose-lg max-w-none">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          {post.title}
-        </h1>
-        <div className="text-gray-600 dark:text-gray-400 mb-8">
+        <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
+        <p className="text-gray-600 dark:text-gray-400 mb-8">
           {post.description}
-        </div>
-        <div className="prose prose-lg max-w-none">
-          <MDXRemote source={post.content} />
-        </div>
+        </p>
+        <MDXRemote source={post.content} />
       </article>
     </div>
   );
 }
 ```
 
+## SEO Optimization with Metadata
+
+Adding metadata improves search visibility and social sharing:
+
+```tsx
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'My Blog — Modern Web Development',
+  description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
+  keywords: ['Next.js', 'MDX', 'Tailwind CSS', 'Blog', 'Web Development'],
+  authors: [{ name: 'Your Name' }],
+  openGraph: {
+    title: 'My Blog — Modern Web Development',
+    description: 'A modern blog built with Next.js, MDX, and Tailwind CSS',
+    type: 'website',
+    locale: 'en_US',
+  },
+};
+```
+
+## MDX Blog Posts
+
+MDX gives you the flexibility of React with the simplicity of Markdown — perfect for technical blogging and documentation.
+
+Example MDX Blog Post: (posts/hello-world.mdx)
+
+````mdx
+---
+title: Hello World
+description: My first post written in MDX
+date: 2026-01-01
+---
+
+Welcome to my blog 👋  
+This is my first post written using **MDX**, which allows me to combine Markdown with React components.
+
+## Why MDX?
+
+MDX lets you:
+
+- Write content using Markdown
+- Embed React components directly in posts
+- Create interactive, reusable blog experiences
+
+## Sample Code Block
+
+Here’s a simple example using JavaScript:
+
+```js
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+
+console.log(greet('World'));
+```
+````
+
 ## Conclusion
 
-This setup provides a solid foundation for a modern blog with:
+This setup provides a modern blog with:
 
 - ✅ Syntax highlighting for code blocks
-- ✅ SEO optimization with metadata
 - ✅ Responsive design with Tailwind CSS
-- ✅ Static site generation for performance
-- ✅ MDX support for interactive content
+- ✅ Static site generation for GitHub Pages
+- ✅ SEO optimization with metadata
+- ✅ MDX support for flexible content
 
-Happy coding! 🚀
+I’m excited to keep blogging and sharing what I learn while building across Agentic AI, frontend engineering, and cloud-native systems. 🚀
