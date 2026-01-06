@@ -4,6 +4,13 @@ import { Metadata } from 'next';
 import CodeBlock from '@/app/components/CodeBlock';
 import PageLayout from '@/app/components/PageLayout';
 import { formatDate } from '@/lib/utils';
+import remarkGfm from 'remark-gfm';
+
+const mdxOptions = {
+  mdxOptions: {
+    remarkPlugins: [remarkGfm],
+  },
+};
 
 export async function generateStaticParams() {
   const posts = getAllPosts();
@@ -78,7 +85,11 @@ export default async function PostPage({
         <p className="text-gray-500 mb-8 mt-0">
           Last updated: {formatDate(data.date)}
         </p>
-        <MDXRemote source={content} components={components} />
+        <MDXRemote
+          source={content}
+          components={components}
+          options={mdxOptions}
+        />
       </article>
     </PageLayout>
   );

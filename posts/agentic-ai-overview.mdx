@@ -1,0 +1,206 @@
+---
+title: 'Agentic AI: A Practical Overview and Design Patterns'
+description: 'An introduction to Agentic AI, focusing on core concepts and design patterns that power real-world AI systems.'
+date: '2025-01-06'
+---
+
+## Agentic AI
+
+**Agentic AI isn’t about smarter models.**
+It’s about designing systems where models can **plan, act, observe outcomes, and iterate toward a goal**.
+
+This post is my attempt to explain Agentic AI. In future posts, I’ll go deeper into reflection patterns, tool usage, and multi-agent systems. Here, the focus is on the **big picture and the foundational design patterns** that make agentic systems work.
+
+---
+
+## From Single Prompts to Goal-Driven Systems
+
+Traditional LLM usage looks like this:
+
+```text
+Prompt → Response
+```
+
+Agentic systems follow a very different shape:
+
+```text
+Goal → Plan → Action → Observation → Iteration
+```
+
+Instead of asking a model to “get it right in one shot,” we let it:
+
+- Break problems down
+- Execute step-by-step
+- Adjust based on intermediate results
+
+This shift — from **text generation** to **process orchestration** — is the core idea behind Agentic AI.
+
+One misconception is that agentic systems must be fully autonomous. In practice, autonomy exists on a spectrum:
+
+- **Direct generation**: single response, no iteration
+- **Structured workflows**: multiple predefined LLM steps
+- **Goal-oriented agents**: dynamic planning and execution
+- **Highly autonomous systems**: reflection, tools, and adaptation
+
+Most production systems sit somewhere in the middle — and that’s intentional.
+
+> The goal isn’t maximum autonomy.
+> The goal is **reliable progress toward an outcome**.
+
+---
+
+## Agent Architecture (Simple Loop)
+
+At its core, an agentic system is just a repeatable loop that plans, acts, and checks progress toward a goal.
+
+### Agent Loop
+
+```
+┌─────────┐
+│  Goal   │
+└────┬────┘
+     │
+     ▼
+┌─────────┐
+│ Planner │  ← Generates or updates a plan
+└────┬────┘
+     │
+     ▼
+┌──────────┐
+│ Executor │  ← LLM calls, tools, API actions
+└────┬─────┘
+     │
+     ▼
+┌──────────┐
+│ Evaluator│  ← Did this move us closer to the goal?
+└────┬─────┘
+     │
+     ├── Done → Final Output
+     │
+     └── Iterate → Back to Planner
+```
+
+### Common Extensions (When Needed)
+
+- **Reflection** → Implemented inside the Evaluator
+- **Tool Use** → Added to the Executor
+- **Constraints** → Applied to Planner and Executor
+- **Human Review** → Inserted between Evaluator and next iteration
+- **Memory** → Shared context across Planner and Executor
+
+> Most agentic systems are variations of this loop, with tighter constraints and better evaluation as they move toward production.
+
+You don’t need complex frameworks to build agentic AI.
+You need **clear loops, explicit evaluation, and controlled autonomy**.
+
+---
+
+## Why Design Patterns Matter in Agentic AI
+
+Agentic systems are powerful, but they can also:
+
+- Drift off-task
+- Become expensive
+- Fail in subtle, hard-to-debug ways
+
+This is where **agentic design patterns** become essential. They provide structure without killing flexibility.
+
+Below are the core patterns that show up frequently in effective agentic systems.
+
+### 1. Task Decomposition
+
+Large problems overwhelm models when treated as a single request.
+
+**Task decomposition** breaks a goal into smaller, explicit steps:
+
+```text
+Goal
+ ├─ Step 1
+ ├─ Step 2
+ ├─ Step 3
+ └─ Final Output
+```
+
+**Why it works:**
+
+- Reduces reasoning errors
+- Improves output quality
+- Makes failures easier to diagnose
+
+This pattern shows up everywhere: research agents, code generation, data analysis, and document processing.
+
+### 2. Plan-Then-Execute
+
+Instead of immediately acting, the system first generates a plan.
+
+**Typical flow:**
+
+1. Create a plan
+2. Review or validate the plan
+3. Execute each step sequentially
+
+By externalizing the plan, we gain:
+
+- Better interpretability
+- More control
+- Easier debugging
+
+Planning turns the model’s hidden reasoning into something we can inspect and improve.
+
+### 3. Evaluation as a First-Class Concept
+
+One of the most important lessons when building agentic systems is this:
+
+> If you don’t measure failures, you can’t improve the system.
+
+Strong agentic workflows treat evaluation as part of the design:
+
+- Where does the agent fail?
+- How often does it fail?
+- What type of failure is it?
+
+Instead of guessing, we **observe, measure, and iterate**.
+
+### 4. Constrained Autonomy
+
+Counterintuitively, good agentic systems often limit freedom:
+
+- Restricted tool access
+- Structured outputs
+- Bounded action spaces
+
+These constraints:
+
+- Improve safety
+- Reduce cost
+- Increase predictability
+
+Full autonomy sounds exciting, but **controlled autonomy scales better**.
+
+---
+
+## Agentic AI Design Patterns
+
+| Pattern                        | What It Does                                             | When to Use It                              | Key Benefits                                   | Common Pitfalls                                |
+| ------------------------------ | -------------------------------------------------------- | ------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| **Task Decomposition**         | Breaks a large goal into smaller, explicit steps         | Complex or ambiguous problems               | Reduces reasoning errors, improves reliability | Over-fragmentation can increase cost           |
+| **Plan → Execute**             | Separates planning from execution                        | Multi-step workflows, automation            | Better interpretability and control            | Plans can become stale if not validated        |
+| **Reflection**                 | Agent reviews and critiques its own output               | Quality-sensitive tasks, writing, reasoning | Improves correctness and coherence             | Can loop endlessly without limits              |
+| **Tool Use**                   | Allows agents to call external tools (search, DBs, APIs) | Tasks requiring external data or actions    | Expands capability beyond the model            | Tool misuse or unnecessary calls increase cost |
+| **Evaluation (Eval-as-Step)**  | Explicitly checks outputs against criteria               | Production systems, critical decisions      | Enables measurement and iteration              | Poor eval design gives false confidence        |
+| **Constrained Autonomy**       | Limits actions, tools, or outputs                        | Safety-critical or cost-sensitive systems   | Predictability, safety, scalability            | Too many constraints reduce flexibility        |
+| **Human-in-the-Loop**          | Pauses for human review or approval                      | Legal, healthcare, high-risk domains        | Combines AI speed with human judgment          | Adds latency if overused                       |
+| **Memory (Short / Long-Term)** | Stores context across steps or sessions                  | Research agents, assistants                 | Improves continuity and personalization        | Memory bloat and stale context                 |
+| **Retry & Fallback**           | Re-attempts with modified prompts or strategies          | Fragile tasks, external API calls           | Increases success rates                        | Can mask systemic issues                       |
+
+---
+
+## Conclusion
+
+> **Agentic AI is about designing workflows, not writing prompts.**
+
+**Key takeaway:**
+
+> Effective agentic systems are rarely built from a single pattern. Most production systems combine **planning, constrained autonomy, evaluation, and selective tool use** to balance capability with reliability.
+
+In the next posts, I’ll dive deeper into common patterns.

@@ -6,7 +6,7 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: {
     default: 'Prathamesh Satpute',
-    template: '%s',
+    template: '%s | Prathamesh Satpute',
   },
   description:
     'A full-stack engineer passionate about AI, web development and open source. Sharing insights on Agentic AI, web development and more.',

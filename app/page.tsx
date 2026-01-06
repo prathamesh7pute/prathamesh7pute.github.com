@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import PageLayout from './components/PageLayout';
 
 export const metadata: Metadata = {
-  title: 'Home',
+  title: 'Prathamesh Satpute',
   description:
     'Read my latest thoughts on Agentic AI, web development and cloud-native infrastructure.',
   openGraph: {
