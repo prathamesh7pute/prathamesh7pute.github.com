@@ -7,6 +7,7 @@ import {
   oneLight,
 } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTheme } from 'next-themes';
+import { useMounted } from '@/lib/useMounted';
 
 import CopyIcon from './icons/CopyIcon';
 import CheckIcon from './icons/CheckIcon';
@@ -17,7 +18,8 @@ interface CodeBlockProps {
 }
 
 export default function CodeBlock({ children, language }: CodeBlockProps) {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const mounted = useMounted();
   const [copied, setCopied] = useState(false);
 
   const rawCode = String(children || '').trim();
@@ -32,14 +34,14 @@ export default function CodeBlock({ children, language }: CodeBlockProps) {
     }
   };
 
-  const isDark = theme === 'dark';
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
     <div className="relative group">
       <button
         onClick={handleCopy}
-        className="absolute top-2 right-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-white transition-all opacity-0 group-hover:opacity-100"
-        aria-label="Copy code"
+        className="absolute top-2 right-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-gray-400 hover:text-white transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+        aria-label={copied ? 'Code copied' : 'Copy code'}
         type="button"
       >
         {copied ? (

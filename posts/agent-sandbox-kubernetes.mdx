@@ -1,0 +1,479 @@
+---
+title: 'Agent Sandbox on Kubernetes: Templates, Warm Pools, Claims, and Lifecycle'
+description: 'A practical guide to Agent Sandbox, claims, templates, warm pools, lifecycle, networking and persistent workspaces.'
+date: '2026-07-19'
+---
+
+## Agent Sandbox
+
+**A Pod runs containers. A Sandbox represents one environment assigned to one piece of work.**
+
+That environment might belong to an AI agent running a Python script, a user opening a development workspace, or a service processing an isolated task. It may need to stay alive across several interactions, keep files, expose a stable endpoint, start quickly, and disappear when the work is done.
+
+Agent Sandbox adds that lifecycle around a Kubernetes Pod without tying the API to a particular runtime or cluster provider.
+
+The API is built from four resources. Read them as one short workflow:
+
+```text
+SandboxTemplate  describes the environment
+SandboxWarmPool  keeps clean environments ready
+SandboxClaim     requests one environment
+Sandbox          owns the environment and its Pod
+```
+
+The rest of this post shows how those pieces work together and what changes in real scenarios such as networking, persistent storage, and warm or cold allocation.
+
+---
+
+## Why Not Just Create a Pod?
+
+A Pod is often enough for a normal application or batch job. But a raw Pod does not answer several questions that appear with agent workloads:
+
+- Which environment belongs to this agent run?
+- Should it be running, suspended, finished, or expired?
+- How can another process claim a ready environment without selecting Pods itself?
+- Can files survive if the underlying Pod is recreated?
+- How do we keep clean environments ready for the next request?
+- When should the environment and its resources be removed?
+
+A Sandbox provides a stable object for that lifecycle. The Pod still runs the containers, while the Sandbox controller creates it, observes it, and cleans it up.
+
+```text
+Pod:      Create → Schedule → Run → Terminate
+
+Sandbox: Prepare → Allocate → Use → Finish or Expire → Clean up
+                           └─ Pod execution happens here
+```
+
+A Deployment is still better for interchangeable serving replicas, and a Job is still better for ordinary finite batch work. A Sandbox fits when the unit we care about is **one environment for one user, agent, or task**.
+
+## The Four Resources
+
+### Sandbox
+
+`Sandbox` is the core resource. One Sandbox manages one Pod-based environment and can optionally manage persistent volumes and a headless Service.
+
+You can create one directly when pre-warmed capacity is not needed. This first snippet shows only the minimum resource shape:
+
+```yaml
+apiVersion: agents.x-k8s.io/v1beta1
+kind: Sandbox
+metadata:
+  name: python-script-runner
+spec:
+  podTemplate:
+    spec:
+      containers:
+        - name: python
+          image: python:3.13-alpine
+```
+
+The image’s default process controls how long this minimal Sandbox runs. The complete example later adds a placeholder long-running process so the agent can execute several commands; a production image would normally start its own runtime or execution endpoint.
+
+### SandboxTemplate
+
+`SandboxTemplate` is the reusable blueprint for Sandboxes created through a pool. It holds the common Pod configuration, optional storage and Service settings, network rules, and policies controlling what a claim may customize.
+
+Templates are normally owned by the platform team so applications do not repeat a large Pod definition with every request.
+
+```yaml
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxTemplate
+metadata:
+  name: python-agent-template
+spec:
+  podTemplate:
+    spec:
+      containers:
+        - name: python
+          image: python:3.13-alpine
+```
+
+### SandboxWarmPool
+
+`SandboxWarmPool` maintains a target number of **ready, clean, and unclaimed** Sandboxes from a template.
+
+`replicas` controls the pool’s ready capacity—not the replica count of an application. The replenishment behavior is illustrated in [How Allocation Works](#how-allocation-works).
+
+```yaml
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxWarmPool
+metadata:
+  name: python-agent-pool
+spec:
+  replicas: 3
+  sandboxTemplateRef:
+    name: python-agent-template
+```
+
+### SandboxClaim
+
+`SandboxClaim` is how an application asks for one environment from a warm pool. The caller does not choose a Pod or race with other callers. It creates a claim, waits until the controller assigns a Sandbox, and reads the assigned name from claim status.
+
+A claim usually maps naturally to one agent run, user workspace, or isolated task.
+
+```yaml
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxClaim
+metadata:
+  name: customer-report-run
+spec:
+  warmPoolRef:
+    name: python-agent-pool
+```
+
+## How Allocation Works
+
+The platform first creates a template and a warm pool. The pool controller creates Sandboxes from the template until its desired ready capacity is available.
+
+```text
+Before a claim
+
+Warm Pool: [Ready A] [Ready B] [Ready C]
+```
+
+When a claim arrives, one ready Sandbox is assigned to it. The pool then creates a clean replacement for the next request.
+
+```text
+While replenishing
+
+Agent Run: [Ready A — claimed]
+Warm Pool: [Ready B] [Ready C] [Starting D]
+```
+
+Once the replacement becomes ready, spare capacity is restored:
+
+```text
+Agent Run: [Ready A — claimed]
+Warm Pool: [Ready B] [Ready C] [Ready D]
+```
+
+`Ready D` is not a replica of the current agent run. It is unused capacity for a future claim. A used Sandbox is not placed back into the pool for another user; the pool replenishes with a clean one.
+
+This is the main difference from a normal replica controller: a warm pool manages **available inventory**, not serving replicas.
+
+## A Python Agent Workflow, End to End
+
+Suppose a user asks an agent to analyze a set of values and return a small report. The agent can reason about the request in its own service, but the Python it generates should run in a separate environment. We want that environment ready quickly, isolated from other runs, and automatically cleaned up.
+
+### 1. Define the Python Environment
+
+```yaml
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxTemplate
+metadata:
+  name: python-agent-template
+spec:
+  podTemplate:
+    metadata:
+      labels:
+        app: python-agent-sandbox
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: python
+          image: python:3.13-alpine
+          command: ['sleep', 'infinity']
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ['ALL']
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: '1'
+              memory: 512Mi
+  networkPolicyManagement: Managed
+  networkPolicy:
+    ingress: []
+    egress: []
+  envVarsInjectionPolicy: Disallowed
+```
+
+The warm pool keeps ready Sandboxes, each backed by a running Pod. Because the generic Python image has no long-running workload, its container would exit, the Pod would stop being Ready, and the Sandbox could not count as ready pool capacity. This example therefore uses `sleep infinity`; omit it when the production image already starts an agent runtime or execution service.
+
+### 2. Keep Ready Capacity
+
+The warm pool is a separate resource that points to the template:
+
+```yaml
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxWarmPool
+metadata:
+  name: python-agent-pool
+spec:
+  replicas: 2
+  sandboxTemplateRef:
+    name: python-agent-template
+  updateStrategy:
+    type: OnReplenish
+```
+
+This pool keeps two ready Python environments available. Empty ingress and egress lists in the template apply a default-deny policy in both directions.
+
+| Update strategy | What happens after the template changes                                             | Best fit                                     |
+| --------------- | ----------------------------------------------------------------------------------- | -------------------------------------------- |
+| `OnReplenish`   | Existing members stay; replacements use the new template as capacity is replenished | Gradual updates without unnecessary churn    |
+| `Recreate`      | Stale, unclaimed members are removed and rebuilt                                    | Faster convergence of all available capacity |
+
+### 3. The Agent Requests an Environment
+
+When the user request arrives, the agent service creates a claim rather than creating or selecting a Pod itself:
+
+```yaml
+apiVersion: extensions.agents.x-k8s.io/v1beta1
+kind: SandboxClaim
+metadata:
+  name: customer-report-run
+spec:
+  warmPoolRef:
+    name: python-agent-pool
+  additionalPodMetadata:
+    labels:
+      workload: customer-report
+    annotations:
+      example.dev/request-id: request-123
+  lifecycle:
+    shutdownPolicy: DeleteForeground
+```
+
+Labels and annotations can identify the request for policy, cost reporting, or observability without changing the environment itself.
+
+The agent waits for the claim to receive a Sandbox, then reads the assigned name from status:
+
+```bash
+kubectl get sandboxclaim customer-report-run -w
+
+SANDBOX_NAME=$(kubectl get sandboxclaim customer-report-run \
+  -o jsonpath='{.status.sandbox.name}')
+```
+
+For this request, a ready pool member can be adopted unchanged, so allocation follows the warm path. Other requests may need a cold start:
+
+| Request                                     | Path | Reason                                      |
+| ------------------------------------------- | ---- | ------------------------------------------- |
+| Uses the template as-is                     | Warm | A matching Sandbox is already running       |
+| Adds only labels or annotations             | Warm | Metadata can be applied during allocation   |
+| Injects environment variables               | Cold | The container needs different configuration |
+| Adds or overrides volume templates          | Cold | Storage must be provisioned before startup  |
+| Arrives when the pool has no ready capacity | Cold | A new Sandbox and Pod must be created       |
+
+The [official documentation](https://agent-sandbox.sigs.k8s.io/docs/) describes warm allocation as happening in milliseconds. This means assigning an already-running Sandbox; it is not a universal end-to-end guarantee. Track `agent_sandbox_claim_startup_latency_ms` at p50, p95, and p99, and measure connection plus first-command latency separately. Cold-start time also includes scheduling, image availability, storage, admission, networking, and runtime startup.
+
+Keep common images, dependencies, environment, and storage in the template, and size `readyReplicas` for expected bursts. Claim-level environment variables and volumes are valuable when customization matters more than latency, but they should not sit on the fast path by accident.
+
+The template’s `envVarsInjectionPolicy` controls whether a claim may add environment variables: `Disallowed` rejects them, `Allowed` permits new names, and `Overrides` also permits replacing template values. A claim can select a container with `containerName`; otherwise the first template container is used.
+
+### 4. The Agent Executes Code for the User Prompt
+
+After allocation, the agent turns the user prompt into a small Python program. An authorized agent service sends that program over the Kubernetes API and executes it inside the assigned environment:
+
+```bash
+kubectl exec -i "sandbox/${SANDBOX_NAME}" -c python -- \
+  python - > result.txt <<'PY'
+values = [18, 24, 31]
+print({"total": sum(values), "count": len(values)})
+PY
+```
+
+In a real application, a Kubernetes client library would normally perform the same exec operation, capture standard output and errors, and return the result to the user. The shell example makes that boundary visible: the agent orchestrates the task, while generated Python runs inside the Sandbox instead of inside the agent service.
+
+### 5. The Agent Releases the Environment
+
+When the run is finished, the application deletes its claim:
+
+```bash
+kubectl delete sandboxclaim customer-report-run
+```
+
+The right cleanup behavior depends on whether the caller needs speed, visible termination, or an audit record:
+
+| Lifecycle setting         | Use it when                                                       | What happens                                                                 |
+| ------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `shutdownPolicy: Delete`  | Normal asynchronous cleanup is enough                             | The claim is deleted and deletion cascades to its Sandbox                    |
+| `DeleteForeground`        | The caller must observe that all owned resources have stopped     | The claim remains terminating until the Sandbox and workload are gone        |
+| `Retain`                  | Claim status should remain as a record                            | Compute is removed, but the expired or finished claim object remains         |
+| `shutdownTime`            | The environment must not run beyond an absolute deadline          | Cleanup begins at the supplied RFC3339 time                                  |
+| `ttlSecondsAfterFinished` | A finite script may finish before the agent explicitly deletes it | Cleanup begins the configured number of seconds after the finished condition |
+
+These safeguards matter when an agent process crashes or loses its connection before releasing the claim. Regardless of the selected policy, the warm pool maintains clean capacity for the next request; the used environment is not returned to another user.
+
+### Workflow Variation: Suspend an Idle Workspace
+
+A short code-execution request should normally release its claim. A long-lived Python workspace may instead need to preserve its identity while stopping active compute. A directly managed Sandbox can switch between `Running` and `Suspended`:
+
+```bash
+kubectl patch sandbox python-script-runner --type=merge \
+  -p '{"spec":{"operatingMode":"Suspended"}}'
+
+kubectl patch sandbox python-script-runner --type=merge \
+  -p '{"spec":{"operatingMode":"Running"}}'
+```
+
+Suspension terminates the active Pod. Resuming asks the controller to make the workload ready again, so it is not the same millisecond path as adopting an already-running warm Sandbox. Persistent storage is needed for data that must survive this transition.
+
+## What Does `service` Do?
+
+Set `service: true` when another workload needs to connect to the Sandbox through a stable in-cluster hostname:
+
+```yaml
+spec:
+  service: true
+```
+
+The controller creates a headless Kubernetes Service and reports its name and fully qualified domain name in `Sandbox.status.service` and `Sandbox.status.serviceFQDN`.
+
+This is useful when a Sandbox exposes an HTTP server, notebook, language server, or another long-running endpoint. Clients use the stable Service name instead of tracking Pod IP changes.
+
+| Value   | Behavior                                                   |
+| ------- | ---------------------------------------------------------- |
+| `true`  | Create and manage a headless Service                       |
+| `false` | Do not create a Service; remove one managed by the Sandbox |
+| Omitted | Preserve an existing Service, but do not create a new one  |
+
+API-server operations such as `exec` do not need this Service. Keep `service: false` when the Sandbox does not accept network connections.
+
+Network access is a separate concern. `service: true` gives the workload a discoverable name; it does not grant ingress through a `NetworkPolicy` or authorize a caller.
+
+## How Should Sandboxes Use Storage?
+
+Choose the storage pattern based on whether data belongs to one Sandbox, many Sandboxes, or one exceptional request.
+
+### A Separate Volume for Every Sandbox
+
+Use `volumeClaimTemplates` on the `SandboxTemplate` when every environment needs its own private workspace:
+
+```yaml
+spec:
+  podTemplate:
+    spec:
+      containers:
+        - name: python
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 1Gi
+```
+
+Each Sandbox receives a different PVC from the same template. The pool provisions it while warming the environment, so the workspace is ready when claimed. This is the normal choice for private agent files, generated code, and per-user state.
+
+### One Existing Volume Shared by Sandboxes
+
+Reference an existing PVC in `podTemplate.spec.volumes` when several Sandboxes should see the same data:
+
+```yaml
+spec:
+  podTemplate:
+    spec:
+      containers:
+        - name: python
+          volumeMounts:
+            - name: shared-datasets
+              mountPath: /datasets
+              readOnly: true
+      volumes:
+        - name: shared-datasets
+          persistentVolumeClaim:
+            claimName: shared-datasets
+```
+
+This is useful for common reference data or model artifacts. The PVC and storage backend must support the required access mode and concurrent mounts—commonly `ReadOnlyMany` or `ReadWriteMany` for Sandboxes that may run on different nodes. Prefer a read-only mount when workloads only consume the shared data.
+
+### A Different Volume for One Request
+
+Put a volume on the `SandboxClaim` when one request needs a different size, storage class, or workspace definition:
+
+```yaml
+spec:
+  warmPoolRef:
+    name: python-agent-pool
+  volumeClaimTemplates:
+    - metadata:
+        name: large-output
+      spec:
+        accessModes: ['ReadWriteOnce']
+        resources:
+          requests:
+            storage: 10Gi
+```
+
+Claim-level volumes must be permitted by the template’s `volumeClaimTemplatesPolicy`. `Disallowed` rejects them, `Allowed` permits new names, and `Overrides` also permits replacing a template entry with the same name.
+
+This customization causes a cold start because an already-running pool member cannot gain a different pre-created storage layout. Keep the normal workspace in the template and use claim-level storage only for exceptional requests.
+
+## Security Is Still Layered
+
+Calling the resource a Sandbox does not automatically make it a security boundary. The strength of isolation comes from the complete cluster configuration.
+
+For agent code execution, consider at least:
+
+- Running as a non-root user and dropping Linux capabilities
+- Disabling privilege escalation and service-account token mounting
+- Setting CPU, memory, and storage limits
+- Applying explicit ingress and egress policy
+- Using trusted, minimal images and read-only filesystems where possible
+- Restricting who can create claims or use `exec`
+- Applying admission, quota, audit, and cleanup policies
+
+The template in this post starts with a minimal Python Alpine image, no mounted service-account token, a non-root user, resource limits, and denied network traffic. Adjust those controls for the scripts and cluster you actually operate.
+
+## Getting Started
+
+You need a Kubernetes cluster, `kubectl`, and permission to install custom resources and controllers. Pin a released version rather than using a moving target. The core controller and extensions are published as separate manifests:
+
+```bash
+export VERSION='v0.5.2'
+
+# Install the core Sandbox API and controller
+kubectl apply -f \
+  "https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}/sandbox.yaml"
+
+# Install SandboxTemplate, SandboxWarmPool, and SandboxClaim
+kubectl apply -f \
+  "https://github.com/kubernetes-sigs/agent-sandbox/releases/download/${VERSION}/extensions.yaml"
+```
+
+The core API provides `Sandbox`; the extensions provide `SandboxTemplate`, `SandboxWarmPool`, and `SandboxClaim`.
+
+Verify the installation, apply the template and pool from this post, and watch the ready capacity:
+
+```bash
+kubectl api-resources | grep -i sandbox
+kubectl apply -f python-agent-platform.yaml
+kubectl get sandboxwarmpools,sandboxes,pods
+```
+
+The examples focus on the fields that change how an agent workload behaves. For every API field, default, condition, and status value, use the authoritative [Agent Sandbox v1beta1 API reference](https://agent-sandbox.sigs.k8s.io/docs/api/). Embedded objects such as `podTemplate.spec`, PVC specifications, and network rules use the normal Kubernetes API.
+
+## Closing Thought
+
+Agent Sandbox is easiest to understand as an allocation lifecycle around a Pod:
+
+```text
+Template defines it
+Warm Pool prepares it
+Claim requests it
+Sandbox owns it
+Pod runs it
+```
+
+That small shift—from managing replicas to managing ready environments—makes the API a natural fit for agent code execution, interactive workspaces, notebooks, and other one-to-one workloads. The application gets a simple claim API, the platform keeps the environment consistent, and Kubernetes continues handling scheduling, storage, networking, and policy underneath it.
+
+## Further Reading
+
+- [Agent Sandbox documentation](https://agent-sandbox.sigs.k8s.io/docs/)
+- [Agent Sandbox v1beta1 API reference](https://agent-sandbox.sigs.k8s.io/docs/api/)
+- [Agent Sandbox source and examples](https://github.com/kubernetes-sigs/agent-sandbox)
+- [Kubernetes PodSpec reference](https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#PodSpec)

@@ -1,6 +1,6 @@
 import { getPostBySlug, getAllPosts } from '@/lib/posts';
 import { MDXRemote } from 'next-mdx-remote/rsc';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import CodeBlock from '@/app/components/CodeBlock';
 import PageLayout from '@/app/components/PageLayout';
 import { formatDate } from '@/lib/utils';

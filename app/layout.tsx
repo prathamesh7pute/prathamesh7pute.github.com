@@ -1,7 +1,7 @@
 import './globals.css';
 import Navbar from './components/Navbar';
 import ThemeProviderWrapper from './components/ThemeProviderWrapper';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: {
@@ -54,8 +54,8 @@ export default function RootLayout({
     // server and client while next-themes initializes. This prevents the
     // hydration mismatch warning. The visual theme still updates correctly.
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen" suppressHydrationWarning>
-        <div className="max-w-4xl mx-auto px-6 py-8 ">
+      <body className="min-h-screen">
+        <div className="max-w-4xl mx-auto px-6 py-8">
           <ThemeProviderWrapper>
             <Navbar />
             {children}

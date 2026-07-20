@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getAllPosts } from '@/lib/posts';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import PageLayout from '../components/PageLayout';
 
 export const metadata: Metadata = {

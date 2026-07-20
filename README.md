@@ -22,5 +22,6 @@ Build for production
 
 ```bash
 npm run build
-npm start
 ```
+
+The static site is generated in `out/` for deployment to GitHub Pages.

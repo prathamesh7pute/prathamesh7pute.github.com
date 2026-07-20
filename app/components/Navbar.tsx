@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   return (
-    <nav className="flex items-center p-4 border-b mb-12">
+    <nav aria-label="Primary" className="flex items-center p-4 border-b mb-12">
       <div className="flex items-center gap-6">
         <Link href="/" className="hover:underline">
           Home

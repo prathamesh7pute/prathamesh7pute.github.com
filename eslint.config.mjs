@@ -1,9 +1,11 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
-import nextConfig from 'eslint-config-next';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTypeScript from 'eslint-config-next/typescript';
 import prettier from 'eslint-config-prettier/flat';
 
 export default defineConfig([
-  ...nextConfig,
+  ...nextVitals,
+  ...nextTypeScript,
   prettier,
   globalIgnores([
     '.next/**',
@@ -13,6 +15,7 @@ export default defineConfig([
     'node_modules/**',
     'dist/**',
     'coverage/**',
+    '*.tsbuildinfo',
     '/*.log',
     '.env.local',
     '.env.*.local',
